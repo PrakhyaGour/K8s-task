@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongodb
+spec:
+  serviceName: database
+  replicas: 1
+  selector:
+    matchLabels:
+      app: database
+  template:
+    metadata:
+      labels:
+        app: database
+        selector: mongodb
+    spec:
+      containers:
+      - name: mongodb
+        image: mongo:4.0.8
+        env:
+          - name: MONGO_INITDB_ROOT_USERNAME_FILE
+            value: /etc/k8-example/admin/MONGO_ROOT_USERNAME
+          - name: MONGO_INITDB_ROOT_PASSWORD_FILE
+            value: /etc/k8-example/admin/MONGO_ROOT_PASSWORD
+        volumeMounts:
+        - name: k8-example
+          mountPath: /etc/k8-example
+          readOnly: true
+      nodeSelector:
+        mongodb-node: "true"
+      volumes:
+      - name: k8-example
+        secret:
+          secretName: mongodb-secret
+          items:
+          - key: MONGO_ROOT_USERNAME
+            path: admin/MONGO_ROOT_USERNAME
+            mode: 0444
+          - key: MONGO_ROOT_PASSWORD
+            path: admin/MONGO_ROOT_PASSWORD
+            mode: 0444
+---
